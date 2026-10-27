@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1218">
+<title>Newsify</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#14181f;--mut:#667085;--bd:#e3e6eb;--ac:#2563eb;--red:#d92d20;--amb:#b54708;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#181c24;--tx:#eef0f4;--mut:#98a2b3;--bd:#2a303b;--ac:#6ea0ff;--red:#f97066;--amb:#fdb022;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+main{max-width:600px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:0}h1 span{color:var(--ac)}
+.sub{color:var(--mut);font-size:13px;margin:2px 0 14px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:16px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;padding:7px 12px;font-size:14px}
+.chips button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.bar{display:flex;gap:8px;align-items:center;margin:16px 0 8px;flex-wrap:wrap}
+.bar button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 12px;font-size:14px}
+.ev{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--mut);border-radius:12px;padding:12px;margin-bottom:8px}
+.ev.h{border-left-color:#e5382b}.ev.m{border-left-color:#f08a1c}.ev.l{border-left-color:#e6c200}.ev.g{border-left-color:#98a2b3}
+.im{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;margin:0 6px 4px 0;color:#fff}
+.im.h{background:#e5382b}.im.m{background:#f08a1c}.im.l{background:#b89a00}.im.g{background:#667085}
+.leg{display:flex;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--mut);margin-bottom:8px}
+.ev b{display:block}.ev .d{color:var(--mut);font-size:13px;margin-top:2px}
+.tag{display:inline-block;font-size:11px;font-weight:700;border:1px solid var(--bd);border-radius:6px;padding:1px 6px;margin:0 4px 4px 0}
+.warn{color:var(--amb);font-size:12px}
+.empty{color:var(--mut);font-size:14px;padding:8px 0}
+.rk{border-radius:14px;padding:14px;margin-bottom:12px;color:#fff;background:#067647}
+.rk b{display:block;font-size:20px}.rk span{font-size:14px;opacity:.95}
+.rk.caution{background:#b54708}.rk.danger{background:#d92d20}.rk.none{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.ss{display:flex;gap:6px;margin-bottom:12px}.ss div{flex:1;border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:7px 4px;text-align:center;font-size:12px;color:var(--mut)}
+.ss div.o{border-color:#12b76a;color:var(--tx)}.ss div.o i{display:block;font-style:normal;color:#12b76a;font-weight:700}
+.set{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:6px}
+.set select{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:5px}
+.why{font-size:13px;margin-top:6px}.win{font-size:12.5px;color:#d92d20;margin-top:4px;font-weight:600}
+.hint{color:var(--mut);font-size:12.5px;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<h1>News<span>ify</span></h1>
+<div class="sub">Pick what you trade. See only the news and holidays that move it. Times in your local time.</div>
+<div class="rk none" id="rk"></div>
+<div class="ss" id="ss"></div>
+<div id="groups"></div>
+<div class="set"><label>No-trade window ±<select id="bl"><option>0</option><option>2</option><option>5</option><option>15</option><option>30</option></select> min</label><label><input type="checkbox" id="nt"> Skip bank holidays</label><label><input type="checkbox" id="ne"> Skip half-days</label><label>Alert me<select id="ld"><option>5</option><option>15</option><option>60</option></select> min before</label></div>
+<div class="bar"><button id="al">Turn on alerts</button><button id="ic">Add all to my calendar</button><span class="sub" id="as" style="margin:0"></span></div>
+<div class="sub" id="lv"></div>
+<h2>Your upcoming events</h2>
+<div class="leg"><span>🔴 High</span><span>🟠 Medium</span><span>🟡 Low</span><span>⚪ Holiday</span></div>
+<div class="chips" id="fl" style="margin-bottom:10px"></div>
+<div id="list"></div>
+<h2>No events loaded yet for</h2>
+<div class="empty" id="miss"></div>
+<div class="hint">Alerts fire before an event while Newsify is open; use Add all to my calendar for alerts that work when the app is closed. Trading sessions use real exchange hours and adjust for daylight saving. Colors show expected impact: red high, orange medium, yellow low, grey holiday. Fed, ECB, BoE, BoJ, RBA dates and market holidays loaded; checked 25 Oct 2026. US jobs report, CPI and PPI for Nov and Dec are in (BLS dates). Later months and other releases need a live data feed.</div>
+</main>
+<script>
+var G={
+"Indices":{NAS100:["USD"],US30:["USD"],SPX500:["USD"],GER40:["EUR"],UK100:["GBP"],JPN225:["JPY"],AUS200:["AUD"]},
+"Forex majors":{EURUSD:["EUR","USD"],GBPUSD:["GBP","USD"],USDJPY:["USD","JPY"],AUDUSD:["AUD","USD"],NZDUSD:["NZD","USD"],USDCAD:["USD","CAD"],USDCHF:["USD","CHF"]},
+"Crosses":{EURGBP:["EUR","GBP"],EURJPY:["EUR","JPY"],GBPJPY:["GBP","JPY"],AUDJPY:["AUD","JPY"],USDZAR:["USD","ZAR"]},
+"Metals, oil, crypto":{XAUUSD:["USD"],XAGUSD:["USD"],USOIL:["USD"],BTCUSD:["USD"],ETHUSD:["USD"]}
+};
+var BASE=[
+{i:"g",t:"2026-11-11T14:30:00Z",n:"Veterans Day: US bank holiday (Nasdaq OPEN)",c:["USD"],all:1},
+{i:"h",t:"2026-11-06T13:30:00Z",n:"US jobs report (NFP)",c:["USD"]},
+{i:"h",t:"2026-11-10T13:30:00Z",n:"US CPI inflation",c:["USD"]},
+{i:"m",t:"2026-11-13T13:30:00Z",n:"US PPI (producer prices)",c:["USD"]},
+{i:"h",t:"2026-12-04T13:30:00Z",n:"US jobs report (NFP)",c:["USD"]},
+{i:"h",t:"2026-12-10T13:30:00Z",n:"US CPI inflation",c:["USD"]},
+{i:"m",t:"2026-12-15T13:30:00Z",n:"US PPI (producer prices)",c:["USD"]},
+{i:"h",t:"2026-10-28T18:00:00Z",n:"FOMC rate decision",c:["USD"]},
+{i:"h",t:"2026-11-05T12:00:00Z",n:"Bank of England rate decision",c:["GBP"],u:1},
+{i:"g",t:"2026-11-26T14:30:00Z",n:"Thanksgiving: US markets CLOSED",c:["USD"],x:1,all:1},
+{i:"m",t:"2026-11-27T18:00:00Z",n:"US markets close early (1pm ET)",c:["USD"]},
+{i:"h",t:"2026-12-08T03:30:00Z",n:"RBA rate decision",c:["AUD"]},
+{i:"h",t:"2026-12-09T19:00:00Z",n:"FOMC rate decision + projections",c:["USD"]},
+{i:"h",t:"2026-12-17T12:00:00Z",n:"Bank of England rate decision",c:["GBP"]},
+{i:"h",t:"2026-12-17T12:45:00Z",n:"ECB rate decision",c:["EUR"]},
+{i:"h",t:"2026-12-18T03:00:00Z",n:"Bank of Japan rate decision",c:["JPY"]},
+{i:"m",t:"2026-12-24T18:00:00Z",n:"US markets close early (1pm ET)",c:["USD"]},
+{i:"g",t:"2026-12-25T14:30:00Z",n:"Christmas: US markets CLOSED, UK bank holiday",c:["USD","GBP"],x:1,all:1},
+{i:"g",t:"2026-12-28T08:00:00Z",n:"UK bank holiday (Boxing Day)",c:["GBP"],all:1},
+{i:"g",t:"2027-01-01T14:30:00Z",n:"New Year: US markets CLOSED, UK bank holiday",c:["USD","GBP"],x:1,all:1},
+{i:"g",t:"2027-01-18T14:30:00Z",n:"MLK Day: US markets CLOSED",c:["USD"],x:1,all:1},
+{i:"h",t:"2027-01-27T19:00:00Z",n:"FOMC rate decision",c:["USD"]},
+{i:"g",t:"2027-02-15T14:30:00Z",n:"Presidents Day: US markets CLOSED",c:["USD"],x:1,all:1},
+{i:"h",t:"2027-03-17T18:00:00Z",n:"FOMC rate decision + projections",c:["USD"]},
+{i:"g",t:"2027-03-26T14:30:00Z",n:"Good Friday: US markets CLOSED, UK bank holiday",c:["USD","GBP"],x:1,all:1},
+{i:"g",t:"2027-03-29T08:00:00Z",n:"UK bank holiday (Easter Monday)",c:["GBP"],all:1}
+];
+var E=[],LIVE=[],NT=1,NE=0,FEED="/.netlify/functions/calendar";
+function merge(){var lo=1e18,hi=0;LIVE.forEach(function(e){var t=+new Date(e.t);if(t<lo)lo=t;if(t>hi)hi=t;});
+ E=BASE.filter(function(e){var t=+new Date(e.t);return !LIVE.length||t<lo-864e5||t>hi+864e5;}).concat(LIVE);E.sort(function(a,b){return new Date(a.t)-new Date(b.t);});}
+function isNT(e){return (NT&&e.i=="g")||(NE&&/early/i.test(e.n));}
+function live(){var s=document.getElementById("lv");
+ fetch(FEED,{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){if(!d||!d.length)throw 0;LIVE=d;try{localStorage.setItem("nf_live",JSON.stringify(d));}catch(x){}merge();list();s.textContent="Live data updated "+hm(Date.now());}).catch(function(){s.textContent=LIVE.length?"Live feed offline, showing last saved data":"Live feed offline, showing built-in dates";});}
+merge();
+var ALLC=["USD","EUR","GBP","JPY","AUD","NZD","CAD","CHF","ZAR"];
+var sel=[],fired={},FL="all";
+var FLS={all:"All",h:"High only",hm:"High + Medium"};
+var RANK={h:3,m:2,l:1,g:0};
+function okf(e){return FL=="all"||(FL=="h"&&e.i=="h")||(FL=="hm"&&(e.i=="h"||e.i=="m"));}
+function fl(){var h="";for(var k in FLS)h+="<button data-f='"+k+"' class='"+(k==FL?"on":"")+"'>"+FLS[k]+"</button>";var el=document.getElementById("fl");el.innerHTML=h;el.onclick=function(ev){var k=ev.target.getAttribute("data-f");if(!k)return;FL=k;try{localStorage.setItem("nf_fl",k);}catch(x){}fl();list();};}
+var BL=5,LEAD=15;
+function ld(){try{var q=localStorage.getItem("nf_bl");var a=localStorage.getItem("nf_nt");NT=a===null?1:+a;NE=+localStorage.getItem("nf_ne")||0;LIVE=JSON.parse(localStorage.getItem("nf_live")||"[]")||[];BL=q===null?5:+q;LEAD=+localStorage.getItem("nf_ld")||15;}catch(e){}try{FL=localStorage.getItem("nf_fl")||"all";}catch(e){}try{sel=JSON.parse(localStorage.getItem("nf_sel")||"[]")||[];}catch(e){sel=[];}}
+function sv(){try{localStorage.setItem("nf_sel",JSON.stringify(sel));}catch(e){}}
+function ccys(){var s={};for(var g in G)sel.forEach(function(i){if(G[g][i])G[g][i].forEach(function(c){s[c]=1;});});return Object.keys(s);}
+function groups(){
+ var h="";for(var g in G){h+="<h2>"+g+"</h2><div class='chips'>";
+  for(var i in G[g])h+="<button data-i='"+i+"' class='"+(sel.indexOf(i)>-1?"on":"")+"'>"+i+"</button>";
+  h+="</div>";}
+ var el=document.getElementById("groups");el.innerHTML=h;
+ el.onclick=function(e){var i=e.target.getAttribute("data-i");if(!i)return;var k=sel.indexOf(i);if(k>-1)sel.splice(k,1);else sel.push(i);sv();groups();list();};
+}
+function fmt(e){var d=new Date(e.t);
+ if(e.all)return d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"})+" · all day";
+ return d.toLocaleString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});}
+function vis(){var cs=ccys(),n=Date.now();return E.filter(function(e){return (isNT(e)||okf(e))&&new Date(e.t).getTime()>n-36e5&&(e.c.some(function(c){return cs.indexOf(c)>-1;})||isNT(e));});}
+function hm(t){return new Date(t).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});}
+function why(e){var n=e.n;
+ if(/Veterans/.test(n))return "US bank holiday. Nasdaq trades, but banks and bonds are shut, so volume is lighter.";
+ if(/NFP|Non-Farm/.test(n))return "Jobs data. One of the biggest movers for Nasdaq. Price often spikes both ways in the first minutes.";
+ if(/CPI/.test(n))return "Inflation data. Drives rate expectations, so it hits indices and USD pairs hard.";
+ if(/PPI/.test(n))return "Producer prices. A hint of where CPI is heading, usually a smaller move.";
+ if(/rate decision|Federal Funds|Statement|Press Conference|Monetary Policy/.test(n))return "Central bank decision. Expect fast moves at the statement and again at the press conference.";
+ if(/CLOSED/.test(n))return "No trading. Plan your week around it.";
+ if(/early/.test(n))return "Shortened session. Volume dries up, moves can be erratic.";
+ return "Bank holiday. Thinner liquidity for that currency.";}
+function extra(e){var h="<div class='why'>"+why(e)+"</div>";
+ if(e.f||e.p)h+="<div class='d'>Forecast "+(e.f||"-")+" · Previous "+(e.p||"-")+"</div>";
+ if(isNT(e))h+="<div class='win'>Your no-trade day</div>";
+ if(e.i=="h"&&!e.all&&BL>0){var t=new Date(e.t).getTime();h+="<div class='win'>No-trade window: "+hm(t-BL*6e4)+" to "+hm(t+BL*6e4)+"</div>";}
+ return h;}
+function risk(){var el=document.getElementById("rk");
+ if(!sel.length){el.className="rk none";el.innerHTML="<b>Pick what you trade</b><span>to get your daily trade-or-wait verdict</span>";return;}
+ var cs=ccys(),n=Date.now(),bl=BL*6e4,today=new Date().toDateString();
+ var ev=E.filter(function(e){return e.c.some(function(c){return cs.indexOf(c)>-1;});});
+ var hi=ev.filter(function(e){return e.i=="h"&&!e.all;}),c="rk",b="CLEAR TO TRADE",sb="No high-impact news in the next 24h.";
+ var inw=hi.filter(function(e){return Math.abs(new Date(e.t)-n)<=bl;})[0];
+ var soon=hi.filter(function(e){var d=new Date(e.t)-n;return d>bl&&d<36e5;})[0];
+ var cl=ev.filter(function(e){return e.x&&new Date(e.t).toDateString()==today;})[0];
+ var later=hi.filter(function(e){return new Date(e.t)>n&&new Date(e.t).toDateString()==today;})[0];
+ var nx=hi.filter(function(e){return new Date(e.t)>n;})[0];
+ var nt=E.filter(function(e){return isNT(e)&&new Date(e.t).toDateString()==today;})[0];
+ if(nt){c="rk danger";b="NO-TRADE DAY";sb=nt.n+". Your rule: no trading on these days.";}
+ else if(inw){c="rk danger";b="NEWS WINDOW: STAY OUT";sb=inw.n+". Wait until "+hm(new Date(inw.t).getTime()+bl)+".";}
+ else if(soon){c="rk caution";b="NEWS SOON";sb=soon.n+" in "+Math.round((new Date(soon.t)-n)/6e4)+" min. No-trade window starts "+hm(new Date(soon.t).getTime()-bl)+".";}
+ else if(cl){c="rk caution";b="MARKET CLOSED TODAY";sb=cl.n;}
+ else if(later){c="rk caution";b="HEADS UP TODAY";sb=later.n+" at "+hm(later.t)+".";}
+ else if(nx)sb="Next big one: "+nx.n+", "+new Date(nx.t).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"})+" "+hm(nx.t)+".";
+ el.className=c;el.innerHTML="<b>"+b+"</b><span>"+sb+"</span>";}
+var SS=[["Sydney","Australia/Sydney",10,0,17,0],["Tokyo","Asia/Tokyo",9,0,15,0],["London","Europe/London",8,0,16,30],["New York","America/New_York",9,30,16,0]];
+function open_(z,a,b,c,d){var o={};new Intl.DateTimeFormat("en-GB",{timeZone:z,weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value;});
+ var m=(+o.hour%24)*60+ +o.minute;return o.weekday!="Sat"&&o.weekday!="Sun"&&m>=a*60+b&&m<c*60+d;}
+function sess(){document.getElementById("ss").innerHTML=SS.map(function(x){var o=open_(x[1],x[2],x[3],x[4],x[5]);return "<div class='"+(o?"o":"")+"'>"+x[0]+"<i>"+(o?"OPEN":"closed")+"</i></div>";}).join("");}
+function ics(){var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Newsify//EN"],f=function(x){return x.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";};
+ vis().forEach(function(e,i){var d=new Date(e.t);L.push("BEGIN:VEVENT","UID:nf"+i+d.getTime()+"@newsify","DTSTAMP:"+f(new Date()),"DTSTART:"+f(d),"DTEND:"+f(new Date(d.getTime()+36e5)),"SUMMARY:"+e.n+" ["+e.c.join("/")+"]","BEGIN:VALARM","TRIGGER:-PT"+LEAD+"M","ACTION:DISPLAY","DESCRIPTION:"+e.n,"END:VALARM","END:VEVENT");});
+ L.push("END:VCALENDAR");var a=document.createElement("a");a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(L.join("\r\n"));a.download="newsify.ics";document.body.appendChild(a);a.click();a.remove();}
+function sets(){var b=document.getElementById("bl"),l=document.getElementById("ld");b.value=BL;l.value=LEAD;
+ b.onchange=function(){BL=+b.value;try{localStorage.setItem("nf_bl",BL);}catch(x){}list();};
+ l.onchange=function(){LEAD=+l.value;try{localStorage.setItem("nf_ld",LEAD);}catch(x){}};
+ var n1=document.getElementById("nt"),n2=document.getElementById("ne");n1.checked=!!NT;n2.checked=!!NE;
+ n1.onchange=function(){NT=n1.checked?1:0;try{localStorage.setItem("nf_nt",NT);}catch(x){}list();};
+ n2.onchange=function(){NE=n2.checked?1:0;try{localStorage.setItem("nf_ne",NE);}catch(x){}list();};
+ document.getElementById("ic").onclick=ics;}
+function list(){
+ var cs=ccys(),n=Date.now(),h="";
+ if(!sel.length)h="<div class='empty'>Tap an instrument above to start.</div>";
+ else{vis().forEach(function(e){
+  h+="<div class='ev "+e.i+"'><span class='im "+e.i+"'>"+({h:"HIGH",m:"MEDIUM",l:"LOW",g:"HOLIDAY"})[e.i]+"</span>"+e.c.map(function(c){return "<span class='tag'>"+c+"</span>";}).join("")+"<b>"+e.n+"</b><div class='d'>"+fmt(e)+"</div>"+extra(e)+(e.u?"<div class='warn'>Date not fully confirmed, double-check</div>":"")+"</div>";});
+  if(!h)h="<div class='empty'>No upcoming events for your picks.</div>";}
+ document.getElementById("list").innerHTML=h;risk();
+ var have={};E.forEach(function(e){e.c.forEach(function(c){have[c]=1;});});
+ var m=cs.filter(function(c){return !have[c];});
+ document.getElementById("miss").textContent=m.length?m.join(", ")+" (central bank dates coming)":"";
+}
+function alerts(){
+ var b=document.getElementById("al"),s=document.getElementById("as");
+ if(!("Notification" in window)){b.style.display="none";s.textContent="Alerts not supported in this browser.";return;}
+ b.onclick=function(){Notification.requestPermission().then(function(p){s.textContent=p=="granted"?"Alerts on (keep Newsify open)":"Alerts blocked";});};
+ if(Notification.permission=="granted")s.textContent="Alerts on (keep Newsify open)";
+ setInterval(function(){if(Notification.permission!="granted")return;var cs=ccys(),n=Date.now();
+  E.forEach(function(e,i){var d=new Date(e.t).getTime()-n;
+   if(d>0&&d<LEAD*6e4&&!fired[e.t+e.n]&&okf(e)&&e.c.some(function(c){return cs.indexOf(c)>-1;})){fired[e.t+e.n]=1;try{new Notification("Newsify: "+e.n,{body:"Starting soon"});}catch(x){}}});},30000);
+}
+ld();merge();groups();fl();sets();list();sess();alerts();live();setInterval(function(){risk();sess();},30000);setInterval(live,18e5);
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");}catch(x){}
+</script>
+</body>
+</html>
